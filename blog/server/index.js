@@ -1,18 +1,24 @@
 const fs = require('fs')
+require('dotenv').config()
 const grpc = require('@grpc/grpc-js')
 const serviceImpl = require('./service_impl.js')
 const { BlogServiceService } = require('../proto/blog_grpc_pb.js')
+const { MongoClient } = require('mongodb')
 
 const addr = 'localhost:50051'
+const mongoClient = new MongoClient(process.env.MONGO_URI)
 
-const cleanup = (server) => {
+global.collection = undefined
+
+const cleanup = async (server) => {
   console.log('Cleanup')
   if (server) {
+    await mongoClient.close()
     server.forceShutdown()
   }
 }
 
-function main() {
+async function main() {
   const server = new grpc.Server()
   const tls = true
 
@@ -36,6 +42,13 @@ function main() {
     cleanup(server)
   })
 
+  // Connect to MongoDB
+  await mongoClient.connect()
+
+  const db = mongoClient.db('blog')
+  collection = db.collection('posts')
+
+  // Register the service
   server.addService(BlogServiceService, serviceImpl)
   server.bindAsync(addr, creds, (err, _) => {
     if (err) {
@@ -47,4 +60,4 @@ function main() {
   console.log('Server started, listening on %s', addr)
 }
 
-main()
+main().catch(cleanup)
