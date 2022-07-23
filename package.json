@@ -1,0 +1,30 @@
+{
+  "name": "blog-grpc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db": "docker-compose up",
+    "server": "node blog/server/index.js",
+    "client": "node blog/client/index.js",    
+    "pb:gen": "powershell -ExecutionPolicy unrestricted ./scripts/gen.ps1 blog",
+
+    
+    "ssl:gen": "cd ssl && powershell -ExecutionPolicy unrestricted ../scripts/ssl.ps1 && cd .."
+  },
+  "devDependencies": {
+    "eslint": "^8.16.0",
+    "eslint-config-google": "^0.14.0",
+    "grpc-tools": "^1.11.2",
+    "mocha": "^10.0.0",
+    "mongodb-memory-server": "^8.6.0",
+    "nyc": "^15.1.0"
+  },
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+
+  
+}
