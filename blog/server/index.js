@@ -1,13 +1,11 @@
 const fs = require('fs')
-require('dotenv').config()
 const grpc = require('@grpc/grpc-js')
 const serviceImpl = require('./service_impl.js')
 const { BlogServiceService } = require('../proto/blog_grpc_pb.js')
 const { MongoClient } = require('mongodb')
 
-const addr = '0.0.0.0:50052'
-const uri = 'mongodb://root:root@localhost:27017/'
-const mongoClient = new MongoClient(uri, {
+require('dotenv').config()
+const mongoClient = new MongoClient(process.env.MONGO_URI, {
   connectTimeoutMS: 1000,
   serverSelectionTimeoutMS: 1000,
 })
@@ -55,14 +53,14 @@ async function main() {
 
   // Register the service
   server.addService(BlogServiceService, serviceImpl)
-  server.bindAsync(addr, creds, (err, _) => {
+  server.bindAsync(process.env.HOST, creds, (err, _) => {
     if (err) {
       return cleanup(server)
     }
 
     server.start()
   })
-  console.log('Server started, listening on %s', addr)
+  console.log('Server started, listening on %s', process.env.HOST)
 }
 
 main().catch(cleanup)
