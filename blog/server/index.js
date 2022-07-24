@@ -5,13 +5,18 @@ const serviceImpl = require('./service_impl.js')
 const { BlogServiceService } = require('../proto/blog_grpc_pb.js')
 const { MongoClient } = require('mongodb')
 
-const addr = 'localhost:50051'
-const mongoClient = new MongoClient(process.env.MONGO_URI)
+const addr = '0.0.0.0:50052'
+const uri = 'mongodb://root:root@localhost:27017/'
+const mongoClient = new MongoClient(uri, {
+  connectTimeoutMS: 1000,
+  serverSelectionTimeoutMS: 1000,
+})
 
 global.collection = undefined
 
-const cleanup = async (server) => {
+async function cleanup(server) {
   console.log('Cleanup')
+
   if (server) {
     await mongoClient.close()
     server.forceShutdown()
@@ -19,6 +24,11 @@ const cleanup = async (server) => {
 }
 
 async function main() {
+  process.on('SIGINT', () => {
+    console.log('Caught interrupt signal')
+    cleanup(server)
+  })
+
   const server = new grpc.Server()
   const tls = true
 
@@ -36,11 +46,6 @@ async function main() {
   } else {
     creds = grpc.ServerCredentials.createInsecure()
   }
-
-  process.on('SIGINT', () => {
-    console.log('Caught interrupt signal')
-    cleanup(server)
-  })
 
   // Connect to MongoDB
   await mongoClient.connect()
@@ -61,3 +66,4 @@ async function main() {
 }
 
 main().catch(cleanup)
+//main()

@@ -28,9 +28,14 @@ const checkNotAcknowledged = (res, callback) => {
 exports.createBlog = async (call, callback) => {
   const data = blogToDocument(call.request)
 
-  await collection.insertOne(data).then((res) => {
-    checkNotAcknowledged(res, callback)
-    const id = res.insertedId.toString()
-    const blogId = new Blog().setId(id)
-  })
+  await collection
+    .insertOne(data)
+    .then((res) => {
+      checkNotAcknowledged(res, callback)
+      const id = res.insertedId.toString()
+      const blogId = new BlogId().setId(id)
+
+      callback(null, blogId)
+    })
+    .catch((err) => internal(err, callback))
 }
