@@ -10,47 +10,47 @@ const blogToDocument = (blog) => {
   }
 }
 
-const internal = (err, callback) =>
-  callback({
-    code: grpc.status.INTERNAL,
-    message: err.toString(),
-  })
-
-const checkNotAcknowledged = (res, callback) => {
-  if (!res.acknowledged) {
-    callback({
-      code: grpc.status.INTERNAL,
-      message: 'Not acknowledged',
-    })
-  }
-}
-
-const checkOID = (id, callback) => {
-  try {
-    return new ObjectId(id)
-  } catch (err) {
-    callback({
-      code: grpc.status.INTERNAL,
-      message: 'Invalid OID',
-    })
-  }
-}
-
-const checkNotFound = (res, callback) => {
-  if (!res || res.matchedCount === 0) {
-    callback({
-      code: grpc.status.NOT_FOUND,
-      message: 'Not found',
-    })
-  }
-}
-
 const documentToBlog = (doc) => {
   return new Blog()
     .setId(doc._id.toString())
     .setAuthorId(doc.author_id)
     .setTitle(doc.title)
     .setContent(doc.content)
+}
+
+const internal = (err, callback) =>
+  callback({
+    code: grpc.status.INTERNAL,
+    message: err.toString(),
+  })
+
+const checkOID = (id, callback) => {
+  try {
+    return new ObjectId(id)
+  } catch (err) {
+    callback({
+      code: grpc.status.INVALID_ARGUMENT,
+      message: 'Invalid OID',
+    })
+  }
+}
+
+const checkNotAcknowledged = (res, callback) => {
+  if (!res.acknowledged) {
+    callback({
+      code: grpc.status.INTERNAL,
+      message: `Operation wasn\'t acknowledged`,
+    })
+  }
+}
+
+const checkNotFound = (res, callback) => {
+  if (!res || res.matchedCount == 0 || res.deletedCount == 0) {
+    callback({
+      code: grpc.status.NOT_FOUND,
+      message: 'Could not find blog',
+    })
+  }
 }
 
 exports.createBlog = async (call, callback) => {

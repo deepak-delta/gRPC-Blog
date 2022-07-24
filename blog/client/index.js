@@ -23,6 +23,23 @@ const createBlog = (client) => {
   })
 }
 
+const readBlog = (client, id) => {
+  console.log('readBlog was invoked')
+
+  return new Promise((resolve, reject) => {
+    const req = new BlogId().setId(id)
+
+    client.readBlog(req, (err, res) => {
+      if (err) {
+        reject(err)
+      }
+
+      console.log(`Blog was read: ${res}`)
+      resolve()
+    })
+  })
+}
+
 async function main() {
   const tls = true
   if (tls) {
@@ -33,8 +50,10 @@ async function main() {
     creds = grpc.ChannelCredentials.createInsecure()
   }
   const client = new BlogServiceClient(process.env.HOST, creds)
+  console.log('Client started, listening on %s', process.env.HOST)
 
   const id = await createBlog(client)
+  await readBlog(client, id)
 
   client.close()
 }
