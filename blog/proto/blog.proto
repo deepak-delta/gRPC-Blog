@@ -20,6 +20,6 @@ service BlogService{
     rpc ReadBlog(BlogId) returns (Blog);
     rpc UpdateBlog(Blog) returns (google.protobuf.Empty);
     rpc DeleteBlog(BlogId) returns (google.protobuf.Empty);
-    rpc ListBLogs(google.protobuf.Empty) returns (stream Blog);
+    rpc ListBlogs(google.protobuf.Empty) returns (stream Blog);
 
 }

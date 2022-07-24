@@ -1,6 +1,7 @@
 const grpc = require('@grpc/grpc-js')
 const { ObjectId } = require('mongodb')
 const { Blog, BlogId } = require('../proto/blog_pb')
+const { Empty } = require('google-protobuf/google/protobuf/empty_pb')
 
 const blogToDocument = (blog) => {
   return {
@@ -76,6 +77,45 @@ exports.readBlog = async (call, callback) => {
     .then((res) => {
       checkNotFound(res, callback)
       callback(null, documentToBlog(res))
+    })
+    .catch((err) => internal(err, callback))
+}
+
+exports.updateBlog = async (call, callback) => {
+  const oid = checkOID(call.request.getId(), callback)
+
+  await collection
+    .updateOne({ _id: oid }, { $set: blogToDocument(call.request) })
+    .then((res) => {
+      checkNotFound(res, callback)
+      checkNotAcknowledged(res, callback)
+      callback(null, new Empty())
+    })
+    .catch((err) => internal(err, callback))
+}
+
+exports.listBlogs = async (call, _) =>
+  await collection
+    .find()
+    .map((doc) => documentToBlog(doc))
+    .forEach((blog) => call.write(blog))
+    .then(() => call.end())
+    .catch((err) =>
+      call.destroy({
+        code: grpc.status.INTERNAL,
+        message: 'Not list the blogs',
+      })
+    )
+
+exports.deleteBlog = async (call, callback) => {
+  const oid = checkOID(call.request.getId(), callback)
+
+  await collection
+    .deleteOne({ _id: oid })
+    .then((res) => {
+      checkNotFound(res, callback)
+      checkNotAcknowledged(res, callback)
+      callback(null, new Empty())
     })
     .catch((err) => internal(err, callback))
 }
