@@ -1,55 +1,36 @@
-const { GreetResponse } = require('../proto/greet_pb.js')
+const grpc = require('@grpc/grpc-js')
+const { Collection } = require('mongodb')
+const { Blog, BlogId } = require('../proto/blog_pb')
 
-//Unary RPC
-exports.greet = (call, callback) => {
-  console.log('Greet was called')
-  //   const req = call.request
-  const res = new GreetResponse().setResult(
-    `Hello ${call.request.getFirstname()}`
-  )
-  callback(null, res)
-}
-
-// Server Streaming RPC
-exports.greetManyTimes = (call, _) => {
-  console.log('GreetManyTimes was invoked')
-  const res = new GreetResponse()
-
-  for (let i = 0; i < 10; ++i) {
-    res.setResult(`Hello ${call.request.getFirstname()} - number ${i}`)
-    call.write(res)
+const blogToDocument = (blog) => {
+  return {
+    author_id: blog.getAuthorId(),
+    title: blog.getTitle(),
+    content: blog.getContent(),
   }
-
-  call.end()
 }
 
-// Client Streaming RPC
-exports.longGreet = (call, callback) => {
-  console.log('LongGreet was called')
-
-  let greet = ''
-
-  call.on('data', (req) => {
-    greet += `Hello ${req.getFirstname()} \n`
+const internal = (err, callback) =>
+  callback({
+    code: grpc.status.INTERNAL,
+    message: err.toString(),
   })
 
-  call.on('end', () => {
-    const res = new GreetResponse().setResult(greet)
-    callback(null, res)
-  })
+const checkNotAcknowledged = (res, callback) => {
+  if (!res.acknowledged) {
+    callback({
+      code: grpc.status.INTERNAL,
+      message: 'Not acknowledged',
+    })
+  }
 }
 
-// Bidirectional Streaming RPC
-exports.greetEveryone = (call, _) => {
-  console.log('GreetEveryone was called')
+exports.createBlog = async (call, callback) => {
+  const data = blogToDocument(call.request)
 
-  call.on('data', (req) => {
-    console.log(`Received: ${req}`)
-    const res = new GreetResponse().setResult(`Hello ${req.getFirstname()}`)
-    console.log(`Sending: ${res}`)
-    call.write(res)
-  })
-  call.on('end', () => {
-    call.end()
+  await collection.insertOne(data).then((res) => {
+    checkNotAcknowledged(res, callback)
+    const id = res.insertedId.toString()
+    const blogId = new Blog().setId(id)
   })
 }

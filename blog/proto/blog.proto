@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 
 message Blog {
     string id = 1;
-    string auther_id = 2;
+    string author_id = 2;
     string title = 3;
     string content = 4;
 }
