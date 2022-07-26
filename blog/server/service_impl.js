@@ -81,6 +81,7 @@ exports.readBlog = async (call, callback) => {
     .catch((err) => internal(err, callback))
 }
 
+// Update Blog
 exports.updateBlog = async (call, callback) => {
   const oid = checkOID(call.request.getId(), callback)
 
@@ -94,6 +95,7 @@ exports.updateBlog = async (call, callback) => {
     .catch((err) => internal(err, callback))
 }
 
+// List Blogs
 exports.listBlogs = async (call, _) =>
   await collection
     .find()
@@ -107,6 +109,7 @@ exports.listBlogs = async (call, _) =>
       })
     )
 
+// Delete Blog
 exports.deleteBlog = async (call, callback) => {
   const oid = checkOID(call.request.getId(), callback)
 
